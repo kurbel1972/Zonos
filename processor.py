@@ -58,13 +58,13 @@ def process_files():
 
             cleaned_country_of_origin = country_of_origin.replace(" ", "") if country_of_origin else ""
             final_row = {
-                "Declared Value": row["Item Content Declared Value"],
-                "Nature of Transaction": row["Nature of Transaction"],
                 "Carrier Code": sql_data["carrier"][:2] if sql_data["carrier"] else "",
-                "Tracking Number": tracking_number,
-                "Arrival Date": arrival_date.strftime("%d/%m/%Y"),
-                "Arrival Port Code": sql_data["arrival_port"][2:5] if sql_data["arrival_port"] and len(sql_data["arrival_port"])>=5 else "",
                 "Flight/ Trip Number": sql_data["flight"][2:] if sql_data["flight"] and len(sql_data["flight"])>=3 else "",
+                "Tracking Number": tracking_number,
+                "Nature of Transaction": row["Nature of Transaction"],
+                "Arrival Port Code": sql_data["arrival_port"][2:5] if sql_data["arrival_port"] and len(sql_data["arrival_port"])>=5 else "",
+                "Arrival Date": arrival_date.strftime("%d/%m/%Y"),
+                "Declared Value": row["Item Content Declared Value"],          
                 "Currency Code": row["Item Content Currency Code"],
                 "Country of Origin": cleaned_country_of_origin,
                 "Shipper Account ID": row["Shipper Account ID"]
