@@ -8,10 +8,13 @@ def process_files():
     input_dir = os.getenv("INPUT_DIR")
     output_dir = os.getenv("OUTPUT_DIR")
     processed_dir = os.getenv("PROCESSED_DIR")
+    log_dir = os.getenv("LOG_DIR", os.path.join(output_dir, "logs"))
 
-    # Ensure the processed directory exists
+    # Ensure the processed and log directories exist
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     # List all files in the input directory
     p_value = 0
@@ -24,10 +27,11 @@ def process_files():
 
         # Read the input CSV file
         with open(input_file, mode="r", encoding="utf-8") as f:
-            reader = csv.DictReader(f, delimiter=";")
+            reader = csv.DictReader(f, delimiter=",")
             rows = list(reader)
 
         final_results = []
+        skipped_rows = []
 
         for row in rows:
 
@@ -46,6 +50,7 @@ def process_files():
             sql_data = get_sql_data(tracking_number)
             if not sql_data:
                 print(f"No SQL data for tracking {tracking_number}")
+                skipped_rows.append(row)
                 continue
 
             # Create final row according to template
@@ -73,9 +78,9 @@ def process_files():
             final_results.append(final_row)
 
         if final_results:
-            # Create output file name
-            today = datetime.now().strftime("%Y%m%d")
-            output_name = f"PT_POST_POSTAL_DATA_{today}.csv".upper()
+            # Create output file name with full timestamp
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            output_name = f"PT_POST_POSTAL_DATA_{timestamp}.csv".upper()
             output_path = os.path.join(output_dir, output_name)
 
             # Write final CSV
@@ -85,6 +90,19 @@ def process_files():
                 writer.writerows(final_results)
 
             print(f"File generated: {output_path}")
+
+        # Write log file for skipped rows
+        if skipped_rows:
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            log_name = f"SKIPPED_ROWS_{timestamp}.csv"
+            log_path = os.path.join(log_dir, log_name)
+
+            with open(log_path, mode="w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=rows[0].keys(), delimiter=",")
+                writer.writeheader()
+                writer.writerows(skipped_rows)
+
+            print(f"Log file generated: {log_path} ({len(skipped_rows)} skipped rows)")
 
         # Move processed file to processed directory
         destination = os.path.join(processed_dir, filename)
