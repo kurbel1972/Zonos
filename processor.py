@@ -85,7 +85,7 @@ def process_files():
 
             # Write final CSV
             with open(output_path, mode="w", encoding="utf-8", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=final_results[0].keys(), delimiter=";")
+                writer = csv.DictWriter(f, fieldnames=final_results[0].keys(), delimiter=",")
                 writer.writeheader()
                 writer.writerows(final_results)
 
