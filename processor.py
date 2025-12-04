@@ -68,11 +68,11 @@ def process_files():
                 "Tracking Number": tracking_number,
                 "Nature of Transaction": row["Nature of Transaction"],
                 "Arrival Port Code": sql_data["arrival_port"][2:5] if sql_data["arrival_port"] and len(sql_data["arrival_port"])>=5 else "",
-                "Arrival Date": arrival_date.strftime("%d/%m/%Y"),
+                "Arrival Date": arrival_date.strftime("%Y-%m-%d"),
                 "Declared Value": row["Item Content Declared Value"],          
                 "Currency Code": row["Item Content Currency Code"],
                 "Country of Origin": cleaned_country_of_origin,
-                "Shipper Account ID": row["Shipper Account ID"]
+                "Shipper Account ID": row["CTT Account"]
             }
 
             final_results.append(final_row)
