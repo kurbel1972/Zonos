@@ -62,6 +62,10 @@ def process_files():
                 arrival_date = datetime.strptime(arrival_date_str, "%Y-%m-%d")
 
             cleaned_country_of_origin = country_of_origin.replace(" ", "") if country_of_origin else ""
+            
+            # Try both possible column names for account ID
+            shipper_account = row.get("CTT Account") or row.get("Shipper Account ID", "")
+            
             final_row = {
                 "Carrier Code": sql_data["carrier"][:2] if sql_data["carrier"] else "",
                 "Flight/ Trip Number": sql_data["flight"][2:] if sql_data["flight"] and len(sql_data["flight"])>=3 else "",
@@ -72,7 +76,7 @@ def process_files():
                 "Declared Value": row["Item Content Declared Value"],          
                 "Currency Code": row["Item Content Currency Code"],
                 "Country of Origin": cleaned_country_of_origin,
-                "Shipper Account ID": row["CTT Account"]
+                "Shipper Account ID": shipper_account
             }
 
             final_results.append(final_row)
