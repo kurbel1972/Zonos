@@ -2,6 +2,7 @@ import os
 import csv
 from datetime import datetime
 from db import get_sql_data
+from email_sender import send_processing_notification
 
 
 def process_files():
@@ -18,6 +19,7 @@ def process_files():
 
     # List all files in the input directory
     p_value = 0
+    
     for filename in os.listdir(input_dir):
         input_file = os.path.join(input_dir, filename)
         if not os.path.isfile(input_file):
@@ -32,6 +34,8 @@ def process_files():
 
         final_results = []
         skipped_rows = []
+        output_file_path = None
+        log_file_path = None
 
         for row in rows:
 
@@ -94,6 +98,7 @@ def process_files():
                 writer.writerows(final_results)
 
             print(f"File generated: {output_path}")
+            output_file_path = output_path
 
         # Write log file for skipped rows
         if skipped_rows:
@@ -107,8 +112,26 @@ def process_files():
                 writer.writerows(skipped_rows)
 
             print(f"Log file generated: {log_path} ({len(skipped_rows)} skipped rows)")
+            log_file_path = log_path
 
         # Move processed file to processed directory
         destination = os.path.join(processed_dir, filename)
         os.rename(input_file, destination)
         print(f"File moved to: {destination}")
+        
+        # Send email notification for this file
+        if output_file_path or log_file_path:
+            print(f"\nSending email notification for {filename}...")
+            
+            email_sent = send_processing_notification(
+                input_filename=filename,
+                output_file=output_file_path,
+                log_file=log_file_path,
+                total_processed=len(final_results),
+                total_skipped=len(skipped_rows)
+            )
+            
+            if email_sent:
+                print(f"Email notification sent successfully for {filename}")
+            else:
+                print(f"Failed to send email notification for {filename}")
