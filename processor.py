@@ -25,6 +25,17 @@ def process_files():
         if not os.path.isfile(input_file):
             continue
 
+        # Rename file with timestamp to avoid conflicts when moving to processed directory
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        name_without_ext, ext = os.path.splitext(filename)
+        new_filename = f"{name_without_ext}_{timestamp}{ext}"
+        new_input_file = os.path.join(input_dir, new_filename)
+        os.rename(input_file, new_input_file)
+        
+        # Update variables to use the renamed file
+        input_file = new_input_file
+        filename = new_filename
+
         print(f"Processing: {input_file}")
 
         # Read the input CSV file
