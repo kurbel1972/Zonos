@@ -1,8 +1,29 @@
 import os
 import csv
+import re
 from datetime import datetime
 from db import get_sql_data
 from email_sender import send_processing_notification
+
+
+def _normalize_header(header):
+    cleaned = (header or "").replace("\ufeff", "")
+    return re.sub(r"[^a-z0-9]", "", cleaned.lower())
+
+
+def _get_row_value(row, *possible_keys, default=""):
+    normalized_row = {
+        _normalize_header(key): value
+        for key, value in row.items()
+        if key is not None
+    }
+
+    for key in possible_keys:
+        normalized_key = _normalize_header(key)
+        if normalized_key in normalized_row:
+            return normalized_row[normalized_key], True
+
+    return default, False
 
 
 def process_files():
@@ -52,12 +73,19 @@ def process_files():
 
             p_value += 1
 
-            print(f"{p_value} --> Processing tracking number: {row['Tracking Number']}")
+            tracking_number, has_tracking_number = _get_row_value(row, "Tracking Number")
+            if not has_tracking_number:
+                print(f"Warning: 'Tracking Number' column not found in input file. Row: {row}")
+                skipped_rows.append(row)
+                continue
 
-            tracking_number = row["Tracking Number"]
+            print(f"{p_value} --> Processing tracking number: {tracking_number}")
 
-            country_of_origin = row.get("Item Content Country of Origin Code")
-            if country_of_origin is None:
+            country_of_origin, has_country_of_origin = _get_row_value(
+                row,
+                "Item Content Country of Origin Code"
+            )
+            if not has_country_of_origin:
                 print(f"Warning: 'Item Content  Country  of  Origin Code' column not found in input file. Row: {row}")
                 country_of_origin = ""
 
@@ -79,17 +107,20 @@ def process_files():
             cleaned_country_of_origin = country_of_origin.replace(" ", "") if country_of_origin else ""
             
             # Try both possible column names for account ID
-            shipper_account = row.get("CTT Account") or row.get("Shipper Account ID", "")
+            shipper_account, _ = _get_row_value(row, "CTT Account", "Shipper Account ID")
+            nature_of_transaction, _ = _get_row_value(row, "Nature of Transaction")
+            declared_value, _ = _get_row_value(row, "Item Content Declared Value")
+            currency_code, _ = _get_row_value(row, "Item Content Currency Code")
             
             final_row = {
                 "Carrier Code": sql_data["carrier"][:2] if sql_data["carrier"] else "",
                 "Flight/ Trip Number": sql_data["flight"][2:] if sql_data["flight"] and len(sql_data["flight"])>=3 else "",
                 "Tracking Number": tracking_number,
-                "Nature of Transaction": row["Nature of Transaction"],
+                "Nature of Transaction": nature_of_transaction,
                 "Arrival Port Code": sql_data["arrival_port"][2:5] if sql_data["arrival_port"] and len(sql_data["arrival_port"])>=5 else "",
                 "Arrival Date": arrival_date.strftime("%Y-%m-%d"),
-                "Declared Value": row["Item Content Declared Value"],          
-                "Currency Code": row["Item Content Currency Code"],
+                "Declared Value": declared_value,
+                "Currency Code": currency_code,
                 "Country of Origin": cleaned_country_of_origin,
                 "Shipper Account ID": shipper_account
             }
@@ -117,10 +148,16 @@ def process_files():
             log_name = f"SKIPPED_ROWS_{timestamp}.csv"
             log_path = os.path.join(log_dir, log_name)
 
+            # Filter out None keys from fieldnames (can happen with empty CSV headers or trailing commas)
+            fieldnames = [key for key in rows[0].keys() if key is not None]
+            
+            # Clean skipped rows by removing None keys
+            cleaned_skipped_rows = [{k: v for k, v in row.items() if k is not None} for row in skipped_rows]
+
             with open(log_path, mode="w", encoding="utf-8", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=rows[0].keys(), delimiter=",")
+                writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=",")
                 writer.writeheader()
-                writer.writerows(skipped_rows)
+                writer.writerows(cleaned_skipped_rows)
 
             print(f"Log file generated: {log_path} ({len(skipped_rows)} skipped rows)")
             log_file_path = log_path
