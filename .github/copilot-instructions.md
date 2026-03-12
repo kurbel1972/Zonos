@@ -27,8 +27,8 @@ Input CSV handling supports multiple column name variations:
 - Always clean country codes: `replace(" ", "")`
 
 ### File Naming Convention
-- Output: `PT_POST_POSTAL_DATA_YYYYMMDDHHMMSS.csv`
-- Logs: `SKIPPED_ROWS_YYYYMMDDHHMMSS.csv`
+- Output: `YYYYMMDDHHMMSS_PT_POST_POSTAL_DATA.csv`
+- Logs: `YYYYMMDDHHMMSS_SKIPPED_ROWS.csv`
 - Use `datetime.now().strftime("%Y%m%d%H%M%S")` for consistency
 
 ### Date Parsing Flexibility

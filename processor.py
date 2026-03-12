@@ -49,7 +49,7 @@ def process_files():
         # Rename file with timestamp to avoid conflicts when moving to processed directory
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         name_without_ext, ext = os.path.splitext(filename)
-        new_filename = f"{name_without_ext}_{timestamp}{ext}"
+        new_filename = f"{timestamp}_{name_without_ext}{ext}"
         new_input_file = os.path.join(input_dir, new_filename)
         os.rename(input_file, new_input_file)
         
@@ -130,7 +130,7 @@ def process_files():
         if final_results:
             # Create output file name with full timestamp
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            output_name = f"PT_POST_POSTAL_DATA_{timestamp}.csv".upper()
+            output_name = f"{timestamp}_PT_POST_POSTAL_DATA.csv".upper()
             output_path = os.path.join(output_dir, output_name)
 
             # Write final CSV
@@ -145,7 +145,7 @@ def process_files():
         # Write log file for skipped rows
         if skipped_rows:
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            log_name = f"SKIPPED_ROWS_{timestamp}.csv"
+            log_name = f"{timestamp}_SKIPPED_ROWS.csv"
             log_path = os.path.join(log_dir, log_name)
 
             # Filter out None keys from fieldnames (can happen with empty CSV headers or trailing commas)

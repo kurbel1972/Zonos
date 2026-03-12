@@ -58,5 +58,5 @@ python main.py
 
 ## Output Files
 
-- **PT_POST_POSTAL_DATA_[timestamp].csv**: Main file with processed data
-- **SKIPPED_ROWS_[timestamp].csv**: Log of rows that were not processed
+- **[timestamp]_PT_POST_POSTAL_DATA.csv**: Main file with processed data
+- **[timestamp]_SKIPPED_ROWS.csv**: Log of rows that were not processed
